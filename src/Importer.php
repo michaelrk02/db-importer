@@ -60,6 +60,6 @@ class Importer
      */
     public function import($filename, $skipErrors = false)
     {
-        $driver->import($filename, $skipErrors, $this->hostname, $this->username, $this->password, $this->database);
+        $this->driver->import($filename, $skipErrors, $this->hostname, $this->username, $this->password, $this->database);
     }
 }
