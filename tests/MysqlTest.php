@@ -1,5 +1,6 @@
 <?php
 
+use Michaelrk02\DbImporter\Importer;
 use Michaelrk02\DbImporter\MysqlDriver;
 use PHPUnit\Framework\TestCase;
 
@@ -38,8 +39,8 @@ class MysqlTest extends TestCase
             'pass' => TEST_MYSQL_DB_PASS,
             'name' => TEST_MYSQL_DB_NAME
         ];
-        $driver = new MysqlDriver($options);
-        $driver->import('tests/test.sql');
+        $importer = new Importer(new MysqlDriver(), $options);
+        $importer->import('tests/test.sql');
 
         $result = $db->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \''.TEST_MYSQL_DB_NAME.'\'');
         $result = $result->fetch_row()[0];
