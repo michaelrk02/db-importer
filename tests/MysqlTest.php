@@ -7,30 +7,25 @@ use PHPUnit\Framework\TestCase;
 class MysqlTest extends TestCase
 {
     private $db;
+    private $importer;
 
-    private function connect()
+    private function tableCount()
     {
-        if ($this->db === null) {
-            $this->db = new mysqli(TEST_MYSQL_DB_HOST, TEST_MYSQL_DB_USER, TEST_MYSQL_DB_PASS, TEST_MYSQL_DB_NAME, TEST_MYSQL_DB_PORT);
-        }
-        return $this->db;
+        $result = $this->db->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \''.TEST_MYSQL_DB_NAME.'\'');
+        $result = $result->fetch_row()[0];
+
+        return $result;
     }
 
     private function reset()
     {
-        $db = $this->connect();
-        $db->query('DROP TABLE IF EXISTS employee');
-        $db->query('DROP TABLE IF EXISTS company');
+        $this->db->query('DROP TABLE IF EXISTS employee');
+        $this->db->query('DROP TABLE IF EXISTS company');
     }
 
-    public function testImport()
+    public function setUp(): void
     {
-        $this->reset();
-
-        $db = $this->connect();
-        $result = $db->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \''.TEST_MYSQL_DB_NAME.'\'');
-        $result = $result->fetch_row()[0];
-        $this->assertEquals($result, 0);
+        $this->db = new mysqli(TEST_MYSQL_DB_HOST, TEST_MYSQL_DB_USER, TEST_MYSQL_DB_PASS, TEST_MYSQL_DB_NAME, TEST_MYSQL_DB_PORT);
 
         $options = [
             'host' => TEST_MYSQL_DB_HOST,
@@ -39,11 +34,16 @@ class MysqlTest extends TestCase
             'pass' => TEST_MYSQL_DB_PASS,
             'name' => TEST_MYSQL_DB_NAME
         ];
-        $importer = new Importer(new MysqlDriver(), $options);
-        $importer->import('tests/test.sql');
 
-        $result = $db->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \''.TEST_MYSQL_DB_NAME.'\'');
-        $result = $result->fetch_row()[0];
-        $this->assertEquals($result, 2);
+        $this->importer = new Importer(new MysqlDriver(), $options);
+    }
+
+    public function testImport()
+    {
+        $this->reset();
+
+        $this->assertEquals(0, $this->tableCount());
+        $this->importer->import('tests/test.sql');
+        $this->assertEquals(2, $this->tableCount());
     }
 }

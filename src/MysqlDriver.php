@@ -29,5 +29,7 @@ class MysqlDriver implements DriverInterface
     {
         $db = new mysqli($options['host'], $options['user'], $options['pass'], $options['name'], $options['port']);
         $db->multi_query(file_get_contents($filename));
+        while ($db->next_result()) {
+        }
     }
 }
