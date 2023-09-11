@@ -2,56 +2,43 @@
 
 namespace Michaelrk02\DbImporter;
 
+use mysqli;
+
 /**
  * MysqlDriver class
  */
 class MysqlDriver implements DriverInterface
 {
     /**
-     * @var string $executable
+     * @var object $db
      */
-    protected $executable;
+    protected $db;
 
     /**
      * Construct a new MysqlDriver object
      *
-     * @param string $executable Path to MySQL executable file
+     * @param array $options Connection options:
+     *
+     * - `host`: database hostname
+     * - `port`: database port
+     * - `user`: database user
+     * - `pass`: database password
+     * - `name`: database name to use
      */
-    public function __construct($executable = '/usr/bin/mysql')
+    public function __construct($options)
     {
-        $this->executable = $executable;
+        $this->db = new mysqli($options['host'], $options['user'], $options['pass'], $options['name'], $options['port']);
     }
 
     /**
-     * Import a SQL file
+     * Import an SQL file
      *
      * @param string $filename SQL file path
-     * @param bool $skipErrors Whether to ignore SQL errors and continue execution
-     * @param string $hostname Connection hostname
-     * @param string $username Connection username
-     * @param string $password Connection password
-     * @param string $database Database to connect
      *
      * @return void
      */
-    public function import($filename, $skipErrors, $hostname, $username, $password, $database)
+    public function import($filename)
     {
-        $filename = addslashes($filename);
-        $hostname = addslashes($hostname);
-        $username = addslashes($username);
-        $password = addslashes($password);
-        $database = addslashes($database);
-
-        $options = '';
-        if ($skipErrors) {
-            $options .= ' --force';
-        }
-
-        $error = [];
-        $exitCode = 0;
-        exec($this->executable.' '.$options.' --host="'.$hostname.'" --user="'.$username.'" --password="'.$password.'" --database="'.$database.'" 0< "'.$filename.'"', $error, $exitCode);
-        if ($exitCode != 0) {
-            throw new \Exception(implode(PHP_EOL, $error));
-        }
+        $this->db->multi_query(file_get_contents($filename));
     }
 }
